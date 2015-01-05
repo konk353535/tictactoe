@@ -3,9 +3,9 @@ class tictactoe(object):
 
 	def __init__(self):
 		# Initialises our board and class
-		self.board = [[-1,1,-1],
-					  [1,-1,1],
-					  [1,-1,1]]
+		self.board = [[0,0,0],
+					  [0,0,0],
+					  [0,0,0]]
 		self.player1 = 1
 		self.player2 = -1
 
@@ -53,16 +53,32 @@ class tictactoe(object):
 		# Diagonal
 		elif((self.board[0][2] + self.board[1][1] + self.board[2][0]) == 3 or (self.board[0][2] + self.board[1][1] + self.board[2][0]) == -3):
 			return True
-		elif(0 not in self.board):
+		elif(not any(0 in sublist for sublist in self.board)):
 			return True
 		else:
+			print "Game Over"
 			return False
+			
 	def get_winner(self):
 		# Will return 1 or 2 depending on who won
 		pass
-		
+	
+	def play_game(self):
+		toMove = -1
+		while(not self.check_winner()):
+			
+			move = False
+			
+			while(not move):
+				self.display_board()
+				inputX = input("Enter X")
+				inputY = input("Enter Y")
+				move = self.move(inputX, inputY, toMove)
+
+			toMove *= -1
+
+
 
 game = tictactoe()
-game.display_board()
-print str(game.board[0])
 print str(game.check_winner())
+game.play_game()
