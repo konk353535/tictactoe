@@ -1,3 +1,5 @@
+import copy
+import random
 
 class tictactoe(object):
 
@@ -93,16 +95,17 @@ def get_winner(board):
 		return 0
 
 
-def get_best_move(board, bot_id):
+def get_best_move(board, bot_id, number):
 
 
 	# Will evaluate each base move
 	# For instance if there is currently 2 moves, will return a score for each move
 	moves = get_list_moves(board)
+	scores = []
 
 	for key, values in moves.iteritems():
 		total_score = 0
-		dummy_board = board
+		dummy_board = copy.deepcopy(board)
 		xy = moves[key]
 		x = xy[0]
 		y = xy[1]
@@ -112,18 +115,20 @@ def get_best_move(board, bot_id):
 			# Someone Won
 			winner = get_winner(dummy_board)
 			if(winner == bot_id):
-				total_score += 1
+				total_score += 5000
 			elif(winner == 0):
 				total_score += 0
 			else:
-				total_score -= 1
+				total_score -= 5000
 		else:
-			print board
-			total_score += get_best_move_not_main(board, bot_id*-1, bot_id)
+			total_score += get_best_move_not_main(dummy_board, bot_id*-1, bot_id, number+1)
 
+		scores.append(total_score)
 		print "Key: " + str(key) + " - move: " + str(xy) + " score: " + str(total_score) + "end"
+	return moves, scores
 
-def get_best_move_not_main(board, whosMove, bot_id):
+def get_best_move_not_main(board, whosMove, bot_id, number):
+
 	# Will evaluate each base move
 	# For instance if there is currently 2 moves, will return a score for each move
 	moves = get_list_moves(board)
@@ -131,7 +136,7 @@ def get_best_move_not_main(board, whosMove, bot_id):
 
 	for key, values in moves.iteritems():
 		
-		dummy_board = board
+		dummy_board = copy.deepcopy(board)
 		xy = moves[key]
 		x = xy[0]
 		y = xy[1]
@@ -142,13 +147,13 @@ def get_best_move_not_main(board, whosMove, bot_id):
 			# Someone Won
 			winner = get_winner(dummy_board)
 			if(winner == bot_id):
-				total_score += 1
+				total_score += 10
 			elif(winner == 0):
 				total_score += 0
 			else:
-				total_score -= 1
+				total_score -= 10
 		else:
-			total_score += get_best_move_not_main(board, whosMove*-1, bot_id)
+			total_score += get_best_move_not_main(dummy_board, whosMove*-1, bot_id, number+1)
 
 	return total_score
 
@@ -163,29 +168,78 @@ def get_list_moves(board):
 				move_number += 1
 	return moves
 
-
-
-board = [[0,0,0],[0,-1,-1],[0,0,0]]
-game = tictactoe(board)
-
-toMove = -1
-
-# Runs while the game is not over
-while(not check_winner(board)):
+def get_random_move(board):
+	# Returns x and y in an array of a random available move
+	moves = get_list_moves(board)
 	
-	# Defaults to the move entered being incorrect
-	move = False
+	total_ava_moves = 0
+
+	for x in [0,1,2]:
+		for y in [0,1,2]:
+			if(board[x][y] == 0):
+				total_ava_moves += 1
 	
-	while(not move):
-		game.display_board()
-		get_best_move(board, toMove)
-		inputX = input("Enter X")
-		inputY = input("Enter Y")
-		move = game.move(inputX, inputY, toMove)
-		board = game.board
+	random_move = int((total_ava_moves-1)*random.random())
+	actual_moves = moves[random_move+1]
+	return actual_moves
 
-	# Sets move to the other player
-	toMove *= -1
 
-print "Game Over"
-print str(get_winner(board)) + "Won"
+
+games_won = 0
+games_tied = 0
+games_lost = 0
+games_played = 0
+
+while(games_played < 100):
+
+	# A single Game
+	good_bot = 1
+	bad_bot = -1
+
+	board = [[0,0,0],[0,0,0],[0,0,0]]
+	game = tictactoe(board)
+
+	toMove = -1
+
+	print "Starting"
+
+	# Runs while the game is not over
+	while(not check_winner(board)):
+		
+		# Defaults to the move entered being incorrect
+		move = False
+		
+		while(not move):
+			game.display_board()
+			
+			if(toMove == good_bot):
+				moves, scores = get_best_move(board, toMove, 0)
+				move_best = scores.index(max(scores))
+				move_xy = moves[move_best+1]
+			else:
+				move_xy = get_random_move(board)
+
+			inputX = move_xy[0]
+			inputY = move_xy[1]
+			
+			move = game.move(inputX, inputY, toMove)
+			board = game.board
+
+		# Sets move to the other player
+		toMove *= -1
+
+	print "Game Over"
+	print str(get_winner(board)) + "Won"
+
+	if(get_winner(board) == good_bot):
+		games_won += 1
+	elif(get_winner(board) == 0):
+		games_tied += 1
+	else: 
+		games_lost += 1
+
+	games_played += 1
+
+print games_won
+print games_lost
+print games_tied
